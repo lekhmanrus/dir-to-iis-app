@@ -1,0 +1,65 @@
+{
+  "name": "dir-to-iis-app",
+  "description": "Directories watcher (using glob) to add it to IIS website as applications.",
+  "version": "1.0.0-beta.0",
+  "homepage": "https://lekhmanrus.github.io/dir-to-iis-app/",
+  "bugs": {
+    "url": "https://github.com/lekhmanrus/dir-to-iis-app/issues",
+    "email": "lekhman112@gmail.com"
+  },
+  "author": "Ruslan Lekhman <lekhman112@gmail.com> (https://github.com/lekhmanrus)",
+  "contributors": [
+    "Ruslan Lekhman <lekhman112@gmail.com> (https://github.com/lekhmanrus)"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lekhmanrus/dir-to-iis-app"
+  },
+  "license": "MIT",
+  "readme": "https://github.com/lekhmanrus/dir-to-iis-app/blob/master/README.md",
+  "scripts": {
+    "start": "ts-node ./src/index.ts",
+    "build": "tsc",
+    "postbuild": "cpx \"*(README.md|LICENSE|package.json)\" \"dist\"",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "lint": "tslint --project \"tsconfig.json\"",
+    "release": "standard-version",
+    "commitlint": "commitlint"
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "dist/**/**"
+  ],
+  "private": false,
+  "keywords": [
+    "iis",
+    "node",
+    "watch",
+    "app"
+  ],
+  "dependencies": {
+    "chokidar": "3.3.1",
+    "colors": "1.4.0",
+    "node-windows": "1.0.0-beta.1",
+    "prompts": "2.3.1",
+    "winston": "3.2.1",
+    "xml2json": "0.12.0"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "8.3.5",
+    "@commitlint/config-conventional": "8.3.4",
+    "@commitlint/format": "8.3.4",
+    "@types/node-windows": "0.1.0",
+    "@types/optimist": "0.0.29",
+    "@types/prompts": "2.0.3",
+    "@types/xml2json": "0.11.0",
+    "conventional-changelog-angular": "5.0.6",
+    "cpx": "1.5.0",
+    "husky": "4.2.3",
+    "standard-version": "7.1.0",
+    "ts-node": "8.6.2",
+    "tslib": "1.11.0",
+    "tslint": "6.0.0",
+    "typescript": "3.8.2"
+  }
+}

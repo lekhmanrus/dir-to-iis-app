@@ -1,0 +1,16 @@
+{
+  "extends": [
+    "tslint:recommended"
+  ],
+  "rules": {
+    "array-type": [
+      true,
+      "array-simple"
+    ],
+    "no-console": [
+      true,
+      "dir",
+      "error"
+    ]
+  }
+}

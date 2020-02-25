@@ -1,0 +1,5 @@
+{
+  "hooks": {
+    "prepare-commit-msg": "npm run commitlint -- -e"
+  }
+}
