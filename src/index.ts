@@ -1,3 +1,5 @@
+#! /usr/bin/env node
+
 import { argv, showHelp, usage, options } from 'optimist';
 
 import { DirToIisAppService } from './dir-to-iis-app-service';
@@ -14,7 +16,7 @@ if (argv.h || argv.help) {
 }
 
 function setupCli() {
-  usage(`Usage: $0\n       $0 --uninstall`);
+  usage(`Usage: dir-to-iis-app\n       dir-to-iis-app --uninstall`);
   options('name', {
     alias: 'n',
     describe: `Windows service name to install/uninstall (don't confuse with the display name.`,

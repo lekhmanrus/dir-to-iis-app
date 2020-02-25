@@ -20,16 +20,17 @@
   "scripts": {
     "start": "ts-node ./src/index.ts",
     "build": "tsc",
-    "postbuild": "cpx \"*(README.md|LICENSE|package.json)\" \"dist\"",
     "test": "echo \"Error: no test specified\" && exit 1",
     "lint": "tslint --project \"tsconfig.json\"",
     "release": "standard-version",
-    "commitlint": "commitlint"
+    "commitlint": "commitlint",
+    "prepublish": "tsc"
   },
   "main": "./dist/index.js",
-  "files": [
-    "dist/**/**"
-  ],
+  "bin": {
+    "dir-to-iis-app": "./dist/index.js",
+    "dir-to-iis-app-watcher": "./dist/run-watcher.js"
+  },
   "private": false,
   "keywords": [
     "iis",
@@ -42,6 +43,7 @@
     "colors": "1.4.0",
     "node-windows": "1.0.0-beta.1",
     "prompts": "2.3.1",
+    "tslib": "1.11.0",
     "winston": "3.2.1",
     "xml2json": "0.12.0"
   },
@@ -54,11 +56,9 @@
     "@types/prompts": "2.0.3",
     "@types/xml2json": "0.11.0",
     "conventional-changelog-angular": "5.0.6",
-    "cpx": "1.5.0",
     "husky": "4.2.3",
     "standard-version": "7.1.0",
     "ts-node": "8.6.2",
-    "tslib": "1.11.0",
     "tslint": "6.0.0",
     "typescript": "3.8.2"
   }

@@ -6,7 +6,6 @@ export const Logger = createLogger({
   format: format.simple(),
   transports: [
     new transports.File({ filename: resolve(__dirname, './error.log'), level: 'error' }),
-    new transports.File({ filename: resolve(__dirname, './info.log') }),
-    new transports.Console()
+    new transports.File({ filename: resolve(__dirname, './info.log') })
   ]
 });
