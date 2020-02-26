@@ -32,8 +32,18 @@ function setupCli() {
     describe: `Paths to files, dirs to be watched recursively, or glob patterns.`,
     type: 'string'
   });
+  options('interval', {
+    alias: 'i',
+    describe: `Interval of file system polling, in milliseconds.`,
+    type: 'string'
+  });
+  options('depth', {
+    alias: 'd',
+    describe: `Limits how many levels of subdirectories will be traversed? (Leave -1 to unlimited)`,
+    type: 'string'
+  });
   options('startImmediately', {
-    alias: [ 'i', 'immediately', 'start' ],
+    alias: [ 'r', 'immediately', 'start' ],
     describe: `Should the service get started immediately.`,
     type: 'boolean'
   });
@@ -64,11 +74,21 @@ function processAliases(): any {
     delete opts.p;
   }
 
+  if (!opts.interval) {
+    opts.interval = opts.i;
+    delete opts.i;
+  }
+
+  if (!opts.depth) {
+    opts.depth = opts.d;
+    delete opts.d;
+  }
+
   if (!opts.startImmediately) {
-    opts.startImmediately = opts.immediately || opts.start || opts.i;
+    opts.startImmediately = opts.immediately || opts.start || opts.r;
     delete opts.immediately;
     delete opts.start;
-    delete opts.i;
+    delete opts.r;
   }
 
   return opts;

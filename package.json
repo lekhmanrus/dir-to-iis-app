@@ -24,13 +24,17 @@
     "lint": "tslint --project \"tsconfig.json\"",
     "release": "standard-version",
     "commitlint": "commitlint",
-    "prepublish": "tsc"
+    "prepublishOnly": "tsc"
   },
   "main": "./dist/index.js",
   "bin": {
     "dir-to-iis-app": "./dist/index.js",
     "dir-to-iis-app-watcher": "./dist/run-watcher.js"
   },
+  "files": [
+    "dist"
+  ],
+  "os": [ "win32" ],
   "private": false,
   "keywords": [
     "iis",

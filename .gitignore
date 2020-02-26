@@ -11,8 +11,7 @@ Thumbs.db
 *.orig
 
 # misc
-npm-debug.log
-yarn-error.log
+*.log
 
 # compiled
 /dist

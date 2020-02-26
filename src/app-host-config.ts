@@ -1,12 +1,14 @@
-import { normalize, join, resolve } from 'path';
-import { copyFileSync, readFileSync, statSync, writeFile } from 'fs';
-import { toJson, toXml } from 'xml2json';
+import { normalize, join } from 'path';
+import { copyFileSync, readFileSync, statSync } from 'fs';
+import { execFile } from 'child_process';
+import { toJson } from 'xml2json';
 
 import { Logger } from './logger';
 import { SiteApplicationShort } from './site-application-short';
 
 export class AppHostConfig {
-  public readonly appHostConfigDirectory = normalize('C:/Windows/System32/inetsrv/Config/');
+  public readonly iisDirectory = normalize('C:/Windows/System32/inetsrv/');
+  public readonly appHostConfigDirectory = join(this.iisDirectory, 'Config/');
   public readonly appHostConfigPath = join(this.appHostConfigDirectory, 'applicationHost.config');
   public appHostConfig: any;
   public sites: any;
@@ -19,6 +21,11 @@ export class AppHostConfig {
       throw new Error(error);
     }
     this.$parseConfig();
+  }
+
+  public async getSiteNames(): Promise<string[]> {
+    return (await this._execCommand([ 'list', 'site', '/text:name' ]))
+      .filter((site) => Boolean(site));
   }
 
   public getSite(siteName: string): any {
@@ -57,57 +64,41 @@ export class AppHostConfig {
     };
   }
 
-  public addSiteApplication(siteName: string, application: SiteApplicationShort): any {
+  public async addSiteApplication(siteName: string, application: SiteApplicationShort): Promise<void> {
     if (this.existsSiteApplication(siteName, application.path)) {
       const error = `${application.path} application already exists at ${siteName} IIS site.`;
       Logger.error(error, 'application-host-config');
       return;
     }
 
-    const site = this.getSite(siteName);
-    if (!Array.isArray(site.application)) {
-      site.application = [ site.application ];
-    }
+    await this._execCommand([
+      'add',
+      'app',
+      `/site.name:${siteName}`,
+      `/path:${application.path}`,
+      `/physicalPath:${application.physicalPath}`
+    ]);
 
-    site.application.push({
-      path: application.path,
-      applicationPool: application.pool,
-      virtualDirectory: {
-        path: '/',
-        physicalPath: application.physicalPath
-      }
-    });
+    await this._execCommand([
+      'set',
+      'app',
+      `${siteName}${application.path}`,
+      `/applicationPool:${application.pool}`
+    ]);
 
     Logger.info(
       `${application.path} application has been added to ${siteName} IIS site.`,
       'application-host-config'
     );
-    this._saveConfig();
   }
 
-  public removeSiteApplication(siteName: string, applicationPath: string): any {
-    const site = this.getSite(siteName);
-    if (!site) {
-      const error = `Site ${siteName} not found in IIS.`;
-      Logger.error(error, 'application-host-config');
-      throw new ReferenceError(error);
-    }
-
-    if (!Array.isArray(site.application)) {
-      site.application = [ site.application ];
-    }
-
-    site.application = site.application.filter((item: any) => item.path !== applicationPath);
-
-    if (site.application.length === 1) {
-      site.application = site.application.pop();
-    }
+  public async removeSiteApplication(siteName: string, applicationPath: string): Promise<void> {
+    await this._execCommand([ 'delete', 'app', `${siteName}${applicationPath}` ]);
 
     Logger.info(
       `${applicationPath} application has been removed from ${siteName} IIS site.`,
       'application-host-config'
     );
-    this._saveConfig();
   }
 
   public existsSiteApplication(siteName: string, applicationPath: string): boolean {
@@ -169,11 +160,24 @@ export class AppHostConfig {
     return undefined;
   }
 
-  private _saveConfig(): void {
-    writeFile(
-      resolve(this.appHostConfigPath),
-      toXml(JSON.stringify(this.appHostConfig)),
-      () => Logger.info('Config saved.', 'application-host-config')
-    );
+  private async _execCommand(args: string[]): Promise<string[]> {
+    const commands = args; // .map((arg) => arg.replace(/\\/g, '\\\\').replace(/\//g, '\\\/'));
+    return new Promise((promiseResolve, promiseReject) => {
+      execFile(join(this.iisDirectory, 'appcmd.exe'), commands, (error, stdout, stderr) => {
+        if (error) {
+          Logger.error(error.message, 'application-host-config');
+        }
+
+        if (stderr) {
+          Logger.error(stderr, 'application-host-config');
+        }
+
+        if (error || stderr) {
+          promiseReject();
+        }
+
+        promiseResolve(String(stdout).split('\r\n'));
+      });
+    });
   }
 }

@@ -25,7 +25,11 @@ export class Watcher {
       throw new ReferenceError(error);
     }
 
-    const watchOptions = { usePolling: true, interval: 15 * 1000, depth: 3 };
+    const watchOptions = {
+      usePolling: true,
+      interval: Number(this.options.interval),
+      depth: this.options.depth > -1 ? Number(this.options.depth) : undefined
+    };
     watch(path, watchOptions).on('add', this.$add.bind(this));
     watch(path, watchOptions).on('unlink', this.$remove.bind(this));
     Logger.info(
@@ -34,20 +38,20 @@ export class Watcher {
     );
   }
 
-  protected $add(filePath: string): void {
+  protected async $add(filePath: string): Promise<void> {
     const physicalPath = parse(filePath).dir;
     const path = this._toApplicationPath(physicalPath);
-    this.config.addSiteApplication(this.options.site, {
+    await this.config.addSiteApplication(this.options.site, {
       path,
       pool: this.siteApplication.pool,
       physicalPath
     });
   }
 
-  protected $remove(filePath: string): void {
+  protected async $remove(filePath: string): Promise<void> {
     const physicalPath = parse(filePath).dir;
     const path = this._toApplicationPath(physicalPath);
-    this.config.removeSiteApplication(this.options.site, path);
+    await this.config.removeSiteApplication(this.options.site, path);
   }
 
   private _toApplicationPath(physicalPath: string): string {

@@ -15,15 +15,15 @@ export class DirToIisAppService {
 
   public async install() {
     this._config.saveBackup();
-    await this.readOptions(this.promptOptions());
+    await this.readOptions(await this.promptOptions());
   }
 
   public async uninstall() {
-    const options = this.promptOptions().filter((option) => option.name === 'name');
+    const options = (await this.promptOptions()).filter((option) => option.name === 'name');
     await this.readOptions(options);
   }
 
-  public promptOptions(): Array<prompts.PromptObject<any>> {
+  public async promptOptions(): Promise<prompts.PromptObject[]> {
     return [
       {
         type: 'text',
@@ -35,12 +35,29 @@ export class DirToIisAppService {
         type: 'select',
         name: 'site',
         message: 'IIS website name',
-        choices: this._config.sites.map((site: any) => ({ title: site.name, value: site.name }))
+        choices: (await this._config.getSiteNames()).map((site) => ({ title: site, value: site }))
       },
       {
         type: 'text',
         name: 'paths',
         message: 'Paths to web.config files to be watched recursively, or glob patterns'
+      },
+      {
+        type: 'number',
+        name: 'interval',
+        message: 'Interval of file system polling, in milliseconds.',
+        initial: 15000,
+        min: 1,
+        increment: 1000,
+        validate: (interval: number) => (interval > 0) || `Should be greater than 0.`
+      } as any,
+      {
+        type: 'number',
+        name: 'depth',
+        message: 'Limits how many levels of subdirectories will be traversed? (Leave -1 to unlimited)',
+        initial: -1,
+        min: -1,
+        validate: (depth) => (depth >= -1) || `Should be greater than or equal to -1.`
       },
       {
         type: 'toggle',
@@ -53,7 +70,7 @@ export class DirToIisAppService {
     ];
   }
 
-  public async readOptions(options: Array<prompts.PromptObject<any>>): Promise<void> {
+  public async readOptions(options: prompts.PromptObject[]): Promise<void> {
     prompts.override(this.argv);
     this.run(await prompts(options));
   }
