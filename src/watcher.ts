@@ -30,10 +30,10 @@ export class Watcher {
       interval: Number(this.options.interval),
       depth: this.options.depth > -1 ? Number(this.options.depth) : undefined
     };
-    watch(path, watchOptions).on('add', this.$add.bind(this));
-    watch(path, watchOptions).on('unlink', this.$remove.bind(this));
+    watch(path, watchOptions).on('add', async (filePath) => await this.$add(filePath));
+    watch(path, watchOptions).on('unlink', async (filePath) => await this.$remove(filePath));
     Logger.info(
-      `Started watching on ${this.siteApplication.physicalPath}/${this.options.paths} (${this.options.site})`,
+      `Started watching on ${path} (${this.options.site})`,
       'watcher'
     );
   }

@@ -72,7 +72,9 @@ export class DirToIisAppService {
 
   public async readOptions(options: prompts.PromptObject[]): Promise<void> {
     prompts.override(this.argv);
-    this.run(await prompts(options));
+    const values = await prompts(options);
+    values.paths = this._wrapByQuotes(values.paths);
+    this.run(values);
   }
 
   public run({ name, startImmediately, ...options }: any): void {
@@ -92,6 +94,17 @@ export class DirToIisAppService {
       `Service ${this.argv.uninstall ? 'uninstall' : 'install'}ed: ${JSON.stringify(serviceOptions)}.`,
       'service'
     );
+  }
+
+  private _wrapByQuotes(path: string): string {
+    let correctPath = String(path).trim();
+    if (correctPath.startsWith(`"`) || correctPath.startsWith(`'`)) {
+      correctPath = correctPath.slice(1);
+    }
+    if (correctPath.endsWith(`"`) || correctPath.endsWith(`'`)) {
+      correctPath = correctPath.slice(0, -1);
+    }
+    return `"${correctPath}"`;
   }
 
   private _bindEvents(service: Service, startImmediately: boolean): void {
