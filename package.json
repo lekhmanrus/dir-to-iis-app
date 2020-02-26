@@ -1,7 +1,7 @@
 {
   "name": "dir-to-iis-app",
   "description": "Directories watcher (using glob) to add it to IIS website as applications.",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "homepage": "https://github.com/lekhmanrus/dir-to-iis-app",
   "bugs": {
     "url": "https://github.com/lekhmanrus/dir-to-iis-app/issues",

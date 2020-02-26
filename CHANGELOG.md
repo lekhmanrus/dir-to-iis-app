@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.0.1](https://github.com/lekhmanrus/dir-to-iis-app/compare/v1.0.0...v1.0.1) (2020-02-26)
+
+
+### Bug Fixes
+
+* enforce quotes for paths ([8cf3eea](https://github.com/lekhmanrus/dir-to-iis-app/commit/8cf3eea675f311fb904fa8d37ee0993412400c3d))
+
 ## 1.0.0 (2020-02-26)
 
 
