@@ -1,13 +1,13 @@
 import { resolve } from 'path';
-import { Service, ServiceConfig } from 'node-windows';
+import { EventLogger, Service, ServiceConfig } from 'node-windows';
 import prompts from 'prompts';
 import 'colors';
 
 import { AppHostConfig } from './app-host-config';
-import { Logger } from './logger';
 
 export class DirToIisAppService {
-  private _config: AppHostConfig;
+  private readonly _config: AppHostConfig;
+  private readonly _logger = new EventLogger({ source: 'dir-to-iis-app-service' });
 
   public constructor(public readonly argv: any) {
     this._config = new AppHostConfig();
@@ -85,15 +85,18 @@ export class DirToIisAppService {
       scriptOptions: Object
         .entries(options)
         .map(([ key, value ]) => `--${key}=${value}`)
-        .join(' ')
+        .join(' '),
+      abortOnError: true
     } as any;
     const service = new Service(serviceOptions);
-    this._bindEvents(service, startImmediately);
+    this._bindEvents(name, service, startImmediately);
+    let message = `${name} service installing: ${JSON.stringify(serviceOptions)}.`;
+    if (this.argv.uninstall) {
+      message = `${name} service uninstalling.`;
+    }
+    this._logger.info(message);
+    console.log(message.gray);
     service[this.argv.uninstall ? 'uninstall' : 'install']();
-    Logger.info(
-      `Service ${this.argv.uninstall ? 'uninstall' : 'install'}ed: ${JSON.stringify(serviceOptions)}.`,
-      'service'
-    );
   }
 
   private _wrapByQuotes(path: string): string {
@@ -107,19 +110,45 @@ export class DirToIisAppService {
     return `"${correctPath}"`;
   }
 
-  private _bindEvents(service: Service, startImmediately: boolean): void {
-    service.on('alreadyInstalled', () => console.log('Service already installed.'.cyan));
-    service.on(
-      'invalidInstallation',
-      () => console.log('Invalid service installation (installation is detected but required files are missing).'.red)
-    );
-    service.on('uninstall', () => console.log('Service uninstalled.'.blue));
-    service.on('start', () => console.log('Service started.'.green));
-    service.on('stop', () => console.log('Service stopped.'.yellow));
-    service.on('error', () => console.log('An error occurred.'.red));
+  private _bindEvents(name: string, service: Service, startImmediately: boolean): void {
+    service.on('alreadyInstalled', () => {
+      const message = `${name} service already installed.`;
+      this._logger.info(message);
+      console.log(message.cyan);
+    });
+    service.on('invalidInstallation', () => {
+      const message = `Invalid ${name} service installation (installation is detected but required files are missing).`;
+      this._logger.error(message);
+      console.log(message.red);
+    });
+    service.on('uninstall', () => {
+      const message = `${name} service uninstalled.`;
+      this._logger.info(message);
+      console.log(message.magenta);
+    });
+    service.on('start', () => {
+      const message = `${name} service started.`;
+      this._logger.info(message);
+      console.log(message.green);
+    });
+    service.on('stop', () => {
+      const message = `${name} service stopped.`;
+      this._logger.info(message);
+      console.log(message.yellow);
+    });
+    service.on('error', () => {
+      const message = `${name} service: an error occurred.`;
+      this._logger.error(message);
+      console.log(message.red);
+    });
     service.on('install', () => {
-      console.log('Service installed.'.green);
+      let message = `${name} service installed.`;
+      this._logger.info(message);
+      console.log(message.green);
       if (startImmediately) {
+        message = `${name} service starting.`;
+        this._logger.info(message);
+        console.log(message.gray);
         service.start();
       }
     });

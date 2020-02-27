@@ -50,7 +50,6 @@
     "node-windows": "1.0.0-beta.1",
     "prompts": "2.3.1",
     "tslib": "1.11.0",
-    "winston": "3.2.1",
     "xml2json": "0.12.0"
   },
   "devDependencies": {

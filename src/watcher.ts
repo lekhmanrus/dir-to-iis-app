@@ -1,18 +1,19 @@
 import { watch } from 'chokidar';
 import { parse, relative, resolve } from 'path';
+import { EventLogger } from 'node-windows';
 import 'colors';
 
 import { AppHostConfig } from './app-host-config';
-import { Logger } from './logger';
 import { WatcherOptions } from './watcher-options';
 import { SiteApplicationShort } from './site-application-short';
 
 export class Watcher {
-  public config: AppHostConfig;
-  public siteApplication: SiteApplicationShort;
+  public readonly config: AppHostConfig;
+  public readonly siteApplication: SiteApplicationShort;
+  private readonly _logger = new EventLogger({ source: 'watcher' });
 
   public constructor(public readonly options: WatcherOptions) {
-    Logger.info(`Watcher options ${JSON.stringify(this.options)}`, 'watcher');
+    this._logger.info(`Watcher options ${JSON.stringify(this.options)}`);
     this.config = new AppHostConfig();
     this.siteApplication = this.config.getSiteApplication(this.options.site);
   }
@@ -21,10 +22,11 @@ export class Watcher {
     const path = resolve(this.siteApplication.physicalPath, this.options.paths);
     if (!path) {
       const error = `There is something weird with ${this.options.site} config.`;
-      Logger.error(error, 'watcher');
+      this._logger.error(error);
       throw new ReferenceError(error);
     }
 
+    this._logger.info(`Starting watching on ${path} (${this.options.site})`);
     const watchOptions = {
       usePolling: true,
       interval: Number(this.options.interval),
@@ -32,10 +34,6 @@ export class Watcher {
     };
     watch(path, watchOptions).on('add', async (filePath) => await this.$add(filePath));
     watch(path, watchOptions).on('unlink', async (filePath) => await this.$remove(filePath));
-    Logger.info(
-      `Started watching on ${path} (${this.options.site})`,
-      'watcher'
-    );
   }
 
   protected async $add(filePath: string): Promise<void> {

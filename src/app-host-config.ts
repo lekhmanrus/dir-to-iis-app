@@ -1,9 +1,9 @@
 import { normalize, join } from 'path';
 import { copyFileSync, readFileSync, statSync } from 'fs';
 import { execFile } from 'child_process';
+import { EventLogger } from 'node-windows';
 import { toJson } from 'xml2json';
 
-import { Logger } from './logger';
 import { SiteApplicationShort } from './site-application-short';
 
 export class AppHostConfig {
@@ -13,11 +13,12 @@ export class AppHostConfig {
   public appHostConfig: any;
   public sites: any;
   private readonly _config = readFileSync(this.appHostConfigPath);
+  private readonly _logger = new EventLogger({ source: 'application-host-config' });
 
   public constructor() {
     if (!this._config) {
       const error = 'There is no IIS installed.';
-      Logger.error(error, 'application-host-config');
+      this._logger.error(error);
       throw new Error(error);
     }
     this.$parseConfig();
@@ -36,14 +37,14 @@ export class AppHostConfig {
     const site = this.getSite(siteName);
     if (!site) {
       const error = `Site ${siteName} not found in IIS.`;
-      Logger.error(error, 'application-host-config');
+      this._logger.error(error);
       throw new ReferenceError(error);
     }
 
     const application = this._getNodeBy(site.application, (item) => item.path === '/');
     if (!application) {
       const error = `There is something weird with ${siteName} config.`;
-      Logger.error(error, 'application-host-config');
+      this._logger.error(error);
       throw new ReferenceError(error);
     }
 
@@ -53,7 +54,7 @@ export class AppHostConfig {
     );
     if (!virtualDirectory) {
       const error = `There is something weird with ${siteName} config.`;
-      Logger.error(error, 'application-host-config');
+      this._logger.error(error);
       throw new ReferenceError(error);
     }
 
@@ -67,7 +68,7 @@ export class AppHostConfig {
   public async addSiteApplication(siteName: string, application: SiteApplicationShort): Promise<void> {
     if (this.existsSiteApplication(siteName, application.path)) {
       const error = `${application.path} application already exists at ${siteName} IIS site.`;
-      Logger.error(error, 'application-host-config');
+      this._logger.warn(error);
       return;
     }
 
@@ -86,26 +87,20 @@ export class AppHostConfig {
       `/applicationPool:${application.pool}`
     ]);
 
-    Logger.info(
-      `${application.path} application has been added to ${siteName} IIS site.`,
-      'application-host-config'
-    );
+    this._logger.info(`${application.path} application has been added to ${siteName} IIS site.`);
   }
 
   public async removeSiteApplication(siteName: string, applicationPath: string): Promise<void> {
     await this._execCommand([ 'delete', 'app', `${siteName}${applicationPath}` ]);
 
-    Logger.info(
-      `${applicationPath} application has been removed from ${siteName} IIS site.`,
-      'application-host-config'
-    );
+    this._logger.info(`${applicationPath} application has been removed from ${siteName} IIS site.`);
   }
 
   public existsSiteApplication(siteName: string, applicationPath: string): boolean {
     const site = this.getSite(siteName);
     if (!site) {
       const error = `Site ${siteName} not found in IIS.`;
-      Logger.error(error, 'application-host-config');
+      this._logger.warn(error);
       throw new ReferenceError(error);
     }
 
@@ -130,7 +125,7 @@ export class AppHostConfig {
     } catch { }
     const bakPath = join(this.appHostConfigDirectory, bakFileName);
     copyFileSync(this.appHostConfigPath, bakPath);
-    Logger.info(`Config backup has been saved to ${bakPath}.`, 'application-host-config');
+    this._logger.info(`Config backup has been saved to ${bakPath}.`);
   }
 
   protected $parseConfig(): void {
@@ -140,7 +135,7 @@ export class AppHostConfig {
     }));
     if (!this.appHostConfig) {
       const error = `IIS application host config can't be parsed.`;
-      Logger.error(error, 'application-host-config');
+      this._logger.info(error);
       throw new ReferenceError(error);
     }
 
@@ -165,11 +160,11 @@ export class AppHostConfig {
     return new Promise((promiseResolve, promiseReject) => {
       execFile(join(this.iisDirectory, 'appcmd.exe'), commands, (error, stdout, stderr) => {
         if (error) {
-          Logger.error(error.message, 'application-host-config');
+          this._logger.error(error.message);
         }
 
         if (stderr) {
-          Logger.error(stderr, 'application-host-config');
+          this._logger.error(stderr);
         }
 
         if (error || stderr) {
