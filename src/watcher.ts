@@ -1,5 +1,5 @@
 import { watch } from 'chokidar';
-import { parse, relative, resolve } from 'path';
+import { join, parse, relative, resolve } from 'path';
 import { EventLogger } from 'node-windows';
 import 'colors';
 
@@ -27,17 +27,25 @@ export class Watcher {
     }
 
     this._logger.info(`Starting watching on ${path} (${this.options.site})`);
+    const interval = Number(this.options.interval);
     const watchOptions = {
+      ignoreInitial: true,
+      cwd: resolve(this.siteApplication.physicalPath),
       usePolling: true,
-      interval: Number(this.options.interval),
-      depth: this.options.depth > -1 ? Number(this.options.depth) : undefined
+      interval,
+      depth: Number(this.options.depth) > -1 ? Number(this.options.depth) : undefined,
+      awaitWriteFinish: {
+        stabilityThreshold: interval,
+        pollInterval: interval
+      }
     };
-    watch(path, watchOptions).on('add', async (filePath) => await this.$add(filePath));
-    watch(path, watchOptions).on('unlink', async (filePath) => await this.$remove(filePath));
+    const srcPath = this.options.paths;
+    watch(srcPath, watchOptions).on('add', async (filePath) => await this.$add(filePath));
+    watch(srcPath, watchOptions).on('unlink', async (filePath) => await this.$remove(filePath));
   }
 
   protected async $add(filePath: string): Promise<void> {
-    const physicalPath = parse(filePath).dir;
+    const physicalPath = join(this.siteApplication.physicalPath, parse(filePath).dir);
     const path = this._toApplicationPath(physicalPath);
     await this.config.addSiteApplication(this.options.site, {
       path,
@@ -47,7 +55,7 @@ export class Watcher {
   }
 
   protected async $remove(filePath: string): Promise<void> {
-    const physicalPath = parse(filePath).dir;
+    const physicalPath = join(this.siteApplication.physicalPath, parse(filePath).dir);
     const path = this._toApplicationPath(physicalPath);
     await this.config.removeSiteApplication(this.options.site, path);
   }

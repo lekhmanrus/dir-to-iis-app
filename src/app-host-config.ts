@@ -1,7 +1,7 @@
 import { normalize, join } from 'path';
 import { copyFileSync, readFileSync, statSync } from 'fs';
-import { execFile } from 'child_process';
-import { EventLogger } from 'node-windows';
+import { EventLogger, elevate } from 'node-windows';
+import { exec } from 'child_process';
 import { toJson } from 'xml2json';
 
 import { SiteApplicationShort } from './site-application-short';
@@ -25,7 +25,7 @@ export class AppHostConfig {
   }
 
   public async getSiteNames(): Promise<string[]> {
-    return (await this._execCommand([ 'list', 'site', '/text:name' ]))
+    return (await this._execCommand([ 'list', 'site', '/text:name' ], true))
       .filter((site) => Boolean(site));
   }
 
@@ -155,24 +155,28 @@ export class AppHostConfig {
     return undefined;
   }
 
-  private async _execCommand(args: string[]): Promise<string[]> {
-    const commands = args; // .map((arg) => arg.replace(/\\/g, '\\\\').replace(/\//g, '\\\/'));
+  private async _execCommand(args: string[], hasOutput = false): Promise<string[]> {
     return new Promise((promiseResolve, promiseReject) => {
-      execFile(join(this.iisDirectory, 'appcmd.exe'), commands, (error, stdout, stderr) => {
-        if (error) {
-          this._logger.error(error.message);
-        }
+      const fn = hasOutput ? exec : elevate as typeof exec;
+      fn(
+        [ 'appcmd.exe', ...args ].join(' '),
+        { cwd: this.iisDirectory /* windowsHide: true */ },
+        (error, stdout, stderr) => {
+          if (error) {
+            this._logger.error(error.message);
+          }
 
-        if (stderr) {
-          this._logger.error(stderr);
-        }
+          if (stderr) {
+            this._logger.error(stderr);
+          }
 
-        if (error || stderr) {
-          promiseReject();
-        }
+          if (error || stderr) {
+            promiseReject();
+          }
 
-        promiseResolve(String(stdout).split('\r\n'));
-      });
+          promiseResolve(stdout ? String(stdout).split('\r\n') : [ stdout ]);
+        }
+      );
     });
   }
 }

@@ -86,15 +86,18 @@ export class DirToIisAppService {
         .entries(options)
         .map(([ key, value ]) => `--${key}=${value}`)
         .join(' '),
-      abortOnError: true
+      abortOnError: true,
+      stopparentfirst: true
     } as any;
     const service = new Service(serviceOptions);
     this._bindEvents(name, service, startImmediately);
-    let message = `${name} service installing: ${JSON.stringify(serviceOptions)}.`;
+    let message = `${name} service installing.`;
     if (this.argv.uninstall) {
       message = `${name} service uninstalling.`;
+      this._logger.info(message);
+    } else {
+      this._logger.info(`${message} Options: ${JSON.stringify(serviceOptions)}.`);
     }
-    this._logger.info(message);
     console.log(message.gray);
     service[this.argv.uninstall ? 'uninstall' : 'install']();
   }
