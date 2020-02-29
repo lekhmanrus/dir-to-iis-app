@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.0.2](https://github.com/lekhmanrus/dir-to-iis-app/compare/v1.0.1...v1.0.2) (2020-02-29)
+
+
+### Features
+
+* replace winston logger to windows one ([0cffd16](https://github.com/lekhmanrus/dir-to-iis-app/commit/0cffd16b9ba54ca84a1ac7618a7929e022dd7342))
+
+
+### Bug Fixes
+
+* watcher and config exec command ([5f44c02](https://github.com/lekhmanrus/dir-to-iis-app/commit/5f44c02804ddedf2bae0f9b5eefaca24bab0bda6))
+
 ### [1.0.1](https://github.com/lekhmanrus/dir-to-iis-app/compare/v1.0.0...v1.0.1) (2020-02-26)
 
 
